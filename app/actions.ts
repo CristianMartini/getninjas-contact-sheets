@@ -161,7 +161,7 @@ export async function registerCustomer(data: CustomerRegistrationData) {
       "Código do cliente": data.customerCode,
       Nome: data.fullName,
       Email: data.email,
-      Telefone: data.phone,
+      Telefone: data.phone, // Certifique-se de que este campo está correto
       Endereço: data.address,
       Cidade: data.city,
       Estado: data.state,
@@ -212,7 +212,7 @@ export async function getCustomers() {
       customerCode: row.get("Código do cliente") || "",
       fullName: row.get("Nome") || "",
       email: row.get("Email") || "",
-      phone: row.get("Telefone") || "",
+      phone: row.get("Telefone") || "", // Certifique-se de que está correto
       address: row.get("Endereço") || "",
       city: row.get("Cidade") || "",
       state: row.get("Estado") || "",
