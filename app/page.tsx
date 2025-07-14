@@ -1,69 +1,45 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/hooks/use-toast";
-import {
-  Loader2,
-  Users,
-  CheckCircle,
-  TestTube,
-  AlertCircle,
-  Database,
-} from "lucide-react";
-import { registerCustomer, testConnection } from "./actions";
-import {
-  validateEmail,
-  validatePhone,
-  validateCEP,
-  validateName,
-  formatPhone,
-  formatCEP,
-} from "@/lib/validations";
-import Link from "next/link";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "@/hooks/use-toast"
+import { Loader2, Users, CheckCircle, TestTube, AlertCircle, Database } from "lucide-react"
+import { registerCustomer, testConnection } from "./actions"
+import { validateEmail, validatePhone, validateCEP, validateName, formatPhone, formatCEP } from "@/lib/validations"
+import Link from "next/link"
 
 interface CustomerData {
-  fullName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  acquisitionSource: string;
-  serviceType: string;
-  isCompleted: boolean;
-  observations: string;
+  fullName: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  zipCode: string
+  acquisitionSource: string
+  serviceType: string
+  isCompleted: boolean
+  observations: string
 }
 
 interface ValidationErrors {
-  [key: string]: string;
+  [key: string]: string
 }
 
 export default function CustomerRegistration() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "unknown" | "connected" | "error"
-  >("unknown");
-  const [customerCode, setCustomerCode] = useState("");
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
-    {}
-  );
+  const [isLoading, setIsLoading] = useState(false)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<"unknown" | "connected" | "error">("unknown")
+  const [customerCode, setCustomerCode] = useState("")
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [formData, setFormData] = useState<CustomerData>({
     fullName: "",
     email: "",
@@ -76,141 +52,132 @@ export default function CustomerRegistration() {
     serviceType: "",
     isCompleted: false,
     observations: "",
-  });
+  })
 
   // Testar conexão automaticamente ao carregar a página
   useEffect(() => {
-    handleTestConnection();
-  }, []);
+    handleTestConnection()
+  }, [])
 
   const generateCustomerCode = () => {
-    const timestamp = Date.now().toString().slice(-6);
+    const timestamp = Date.now().toString().slice(-6)
     const random = Math.floor(Math.random() * 1000)
       .toString()
-      .padStart(3, "0");
-    return `CUST${timestamp}${random}`;
-  };
+      .padStart(3, "0")
+    return `CUST${timestamp}${random}`
+  }
 
-  const validateField = (
-    field: keyof CustomerData,
-    value: string | boolean
-  ): string | null => {
+  const validateField = (field: keyof CustomerData, value: string | boolean): string | null => {
     switch (field) {
       case "fullName":
-        const nameValidation = validateName(value as string);
-        return nameValidation.isValid ? null : nameValidation.message!;
+        const nameValidation = validateName(value as string)
+        return nameValidation.isValid ? null : nameValidation.message!
 
       case "email":
-        const emailValidation = validateEmail(value as string);
-        return emailValidation.isValid ? null : emailValidation.message!;
+        const emailValidation = validateEmail(value as string)
+        return emailValidation.isValid ? null : emailValidation.message!
 
       case "phone":
-        const phoneValidation = validatePhone(value as string);
-        return phoneValidation.isValid ? null : phoneValidation.message!;
+        const phoneValidation = validatePhone(value as string)
+        return phoneValidation.isValid ? null : phoneValidation.message!
 
       case "zipCode":
-        const cepValidation = validateCEP(value as string);
-        return cepValidation.isValid ? null : cepValidation.message!;
+        const cepValidation = validateCEP(value as string)
+        return cepValidation.isValid ? null : cepValidation.message!
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
-  const handleInputChange = (
-    field: keyof CustomerData,
-    value: string | boolean
-  ) => {
-    let processedValue = value;
+  const handleInputChange = (field: keyof CustomerData, value: string | boolean) => {
+    let processedValue = value
 
     // Formatação automática
     if (field === "phone" && typeof value === "string") {
-      processedValue = formatPhone(value);
+      processedValue = formatPhone(value)
     } else if (field === "zipCode" && typeof value === "string") {
-      processedValue = formatCEP(value);
+      processedValue = formatCEP(value)
     }
 
     setFormData((prev) => ({
       ...prev,
       [field]: processedValue,
-    }));
+    }))
 
     // Validação em tempo real
     if (typeof processedValue === "string") {
-      const error = validateField(field, processedValue);
+      const error = validateField(field, processedValue)
       setValidationErrors((prev) => ({
         ...prev,
         [field]: error || "",
-      }));
+      }))
     }
-  };
+  }
 
   const validateForm = (): boolean => {
-    const errors: ValidationErrors = {};
-    let isValid = true;
+    const errors: ValidationErrors = {}
+    let isValid = true
 
     // Validar campos obrigatórios
-    const nameError = validateField("fullName", formData.fullName);
+    const nameError = validateField("fullName", formData.fullName)
     if (nameError) {
-      errors.fullName = nameError;
-      isValid = false;
+      errors.fullName = nameError
+      isValid = false
     }
 
-    const emailError = validateField("email", formData.email);
+    const emailError = validateField("email", formData.email)
     if (emailError) {
-      errors.email = emailError;
-      isValid = false;
+      errors.email = emailError
+      isValid = false
     }
 
-    const phoneError = validateField("phone", formData.phone);
+    const phoneError = validateField("phone", formData.phone)
     if (phoneError) {
-      errors.phone = phoneError;
-      isValid = false;
+      errors.phone = phoneError
+      isValid = false
     }
 
-    const cepError = validateField("zipCode", formData.zipCode);
+    const cepError = validateField("zipCode", formData.zipCode)
     if (cepError) {
-      errors.zipCode = cepError;
-      isValid = false;
+      errors.zipCode = cepError
+      isValid = false
     }
 
-    setValidationErrors(errors);
-    return isValid;
-  };
+    setValidationErrors(errors)
+    return isValid
+  }
 
   const handleTestConnection = async () => {
-    setIsTestingConnection(true);
-    setConnectionStatus("unknown");
+    setIsTestingConnection(true)
+    setConnectionStatus("unknown")
 
     try {
-      const result = await testConnection();
+      const result = await testConnection()
       if (result.success) {
-        setConnectionStatus("connected");
+        setConnectionStatus("connected")
         toast({
           title: "✅ Conexão Estabelecida",
           description: result.message,
-        });
+        })
       } else {
-        setConnectionStatus("error");
-        throw new Error(result.error || "Falha ao conectar com a planilha");
+        setConnectionStatus("error")
+        throw new Error(result.error || "Falha ao conectar com a planilha")
       }
     } catch (error) {
-      setConnectionStatus("error");
+      setConnectionStatus("error")
       toast({
         title: "❌ Erro de Conexão",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Falha ao conectar com o Google Sheets",
+        description: error instanceof Error ? error.message : "Falha ao conectar com o Google Sheets",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsTestingConnection(false);
+      setIsTestingConnection(false)
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Verificar conexão antes de enviar
     if (connectionStatus !== "connected") {
@@ -218,42 +185,41 @@ export default function CustomerRegistration() {
         title: "⚠️ Conexão Necessária",
         description: "Teste a conexão com o Google Sheets antes de cadastrar",
         variant: "destructive",
-      });
-      return;
+      })
+      return
     }
 
     // Validar formulário
     if (!validateForm()) {
       toast({
         title: "❌ Dados Inválidos",
-        description:
-          "Por favor, corrija os erros no formulário antes de continuar",
+        description: "Por favor, corrija os erros no formulário antes de continuar",
         variant: "destructive",
-      });
-      return;
+      })
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const newCustomerCode = generateCustomerCode();
-      setCustomerCode(newCustomerCode);
+      const newCustomerCode = generateCustomerCode()
+      setCustomerCode(newCustomerCode)
 
       toast({
         title: "📝 Processando...",
         description: "Cadastrando cliente no sistema...",
-      });
+      })
 
       const result = await registerCustomer({
         customerCode: newCustomerCode,
         ...formData,
-      });
+      })
 
       if (result.success) {
         toast({
           title: "🎉 Sucesso!",
           description: result.message,
-        });
+        })
 
         // Limpar formulário
         setFormData({
@@ -268,62 +234,43 @@ export default function CustomerRegistration() {
           serviceType: "",
           isCompleted: false,
           observations: "",
-        });
-        setValidationErrors({});
+        })
+        setValidationErrors({})
       } else {
-        throw new Error(result.error || "Falha ao registrar cliente");
+        throw new Error(result.error || "Falha ao registrar cliente")
       }
     } catch (error) {
       toast({
         title: "❌ Erro no Cadastro",
-        description:
-          error instanceof Error ? error.message : "Falha ao registrar cliente",
+        description: error instanceof Error ? error.message : "Falha ao registrar cliente",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Função para buscar endereço pelo CEP
-  async function fetchAddressByCEP(cep: string) {
-    const cleanCep = cep.replace(/\D/g, "");
-    if (cleanCep.length !== 8) return null;
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await res.json();
-      if (data.erro) return null;
-      return {
-        address: data.logradouro || "",
-        city: data.localidade || "",
-        state: data.uf || "",
-      };
-    } catch {
-      return null;
+      setIsLoading(false)
     }
   }
 
   const getConnectionStatusColor = () => {
     switch (connectionStatus) {
       case "connected":
-        return "border-green-200 bg-green-50";
+        return "border-green-200 bg-green-50"
       case "error":
-        return "border-red-200 bg-red-50";
+        return "border-red-200 bg-red-50"
       default:
-        return "border-blue-200 bg-blue-50";
+        return "border-blue-200 bg-blue-50"
     }
-  };
+  }
 
   const getConnectionStatusIcon = () => {
     switch (connectionStatus) {
       case "connected":
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-green-600" />
       case "error":
-        return <AlertCircle className="h-5 w-5 text-red-600" />;
+        return <AlertCircle className="h-5 w-5 text-red-600" />
       default:
-        return <TestTube className="h-5 w-5 text-blue-600" />;
+        return <TestTube className="h-5 w-5 text-blue-600" />
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -331,14 +278,9 @@ export default function CustomerRegistration() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Users className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">
-              Sistema de Cadastro de Clientes
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">Sistema de Cadastro de Clientes</h1>
           </div>
-          <p className="text-gray-600">
-            Registre novos clientes e sincronize automaticamente com o Google
-            Sheets
-          </p>
+          <p className="text-gray-600">Registre novos clientes e sincronize automaticamente com o Google Sheets</p>
 
           {/* Link para página de gerenciamento */}
           <div className="mt-4">
@@ -359,27 +301,18 @@ export default function CustomerRegistration() {
                 {getConnectionStatusIcon()}
                 <div>
                   <h3 className="font-medium">
-                    {connectionStatus === "connected" &&
-                      "Conectado ao Google Sheets"}
+                    {connectionStatus === "connected" && "Conectado ao Google Sheets"}
                     {connectionStatus === "error" && "Erro de Conexão"}
                     {connectionStatus === "unknown" && "Status de Conexão"}
                   </h3>
                   <p className="text-sm opacity-75">
-                    {connectionStatus === "connected" &&
-                      "Sistema pronto para cadastrar clientes"}
-                    {connectionStatus === "error" &&
-                      "Verifique as configurações e tente novamente"}
-                    {connectionStatus === "unknown" &&
-                      "Verificando conexão com a planilha..."}
+                    {connectionStatus === "connected" && "Sistema pronto para cadastrar clientes"}
+                    {connectionStatus === "error" && "Verifique as configurações e tente novamente"}
+                    {connectionStatus === "unknown" && "Verificando conexão com a planilha..."}
                   </p>
                 </div>
               </div>
-              <Button
-                onClick={handleTestConnection}
-                disabled={isTestingConnection}
-                variant="outline"
-                size="sm"
-              >
+              <Button onClick={handleTestConnection} disabled={isTestingConnection} variant="outline" size="sm">
                 {isTestingConnection ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -403,21 +336,11 @@ export default function CustomerRegistration() {
               Cadastro de Novo Cliente
             </CardTitle>
             <CardDescription>
-              Preencha os dados do cliente abaixo. Todos os campos marcados com
-              * são obrigatórios.
+              Preencha os dados do cliente abaixo. Todos os campos marcados com * são obrigatórios.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form
-              onSubmit={handleSubmit}
-              onKeyDown={(e) => {
-                const target = e.target as HTMLElement;
-                if (e.key === "Enter" && target.nodeName !== "TEXTAREA") {
-                  e.preventDefault();
-                }
-              }}
-              className="space-y-6"
-            >
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Informações do Cliente */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -425,13 +348,9 @@ export default function CustomerRegistration() {
                   <Input
                     id="fullName"
                     value={formData.fullName}
-                    onChange={(e) =>
-                      handleInputChange("fullName", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("fullName", e.target.value)}
                     placeholder="Digite o nome completo do cliente"
-                    className={
-                      validationErrors.fullName ? "border-red-500" : ""
-                    }
+                    className={validationErrors.fullName ? "border-red-500" : ""}
                     required
                   />
                   {validationErrors.fullName && (
@@ -486,27 +405,7 @@ export default function CustomerRegistration() {
                   <Input
                     id="zipCode"
                     value={formData.zipCode}
-                    onChange={(e) =>
-                      handleInputChange("zipCode", e.target.value)
-                    }
-                    onBlur={async (e) => {
-                      const result = await fetchAddressByCEP(e.target.value);
-                      if (result) {
-                        setFormData((prev) => ({
-                          ...prev,
-                          address: result.address,
-                          city: result.city,
-                          state: result.state.toLowerCase(), // Corrige para minúsculo
-                        }));
-                      } else {
-                        toast({
-                          title: "CEP não encontrado",
-                          description:
-                            "Não foi possível localizar o endereço para o CEP informado.",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
+                    onChange={(e) => handleInputChange("zipCode", e.target.value)}
                     placeholder="12345-678"
                     className={validationErrors.zipCode ? "border-red-500" : ""}
                   />
@@ -543,12 +442,35 @@ export default function CustomerRegistration() {
 
                 <div className="space-y-2">
                   <Label htmlFor="state">Estado</Label>
-                  <Select
-                    value={formData.state}
-                    onChange={(e) => handleInputChange("state", e.target.value)}
-                  >
+                  <Select value={formData.state} onChange={(e) => handleInputChange("state", e.target.value)}>
                     <option value="">Selecione o estado</option>
+                    <option value="ac">Acre</option>
+                    <option value="al">Alagoas</option>
+                    <option value="ap">Amapá</option>
+                    <option value="am">Amazonas</option>
+                    <option value="ba">Bahia</option>
+                    <option value="ce">Ceará</option>
+                    <option value="df">Distrito Federal</option>
+                    <option value="es">Espírito Santo</option>
+                    <option value="go">Goiás</option>
+                    <option value="ma">Maranhão</option>
+                    <option value="mt">Mato Grosso</option>
+                    <option value="ms">Mato Grosso do Sul</option>
+                    <option value="mg">Minas Gerais</option>
+                    <option value="pa">Pará</option>
+                    <option value="pb">Paraíba</option>
+                    <option value="pr">Paraná</option>
+                    <option value="pe">Pernambuco</option>
+                    <option value="pi">Piauí</option>
+                    <option value="rj">Rio de Janeiro</option>
+                    <option value="rn">Rio Grande do Norte</option>
+                    <option value="rs">Rio Grande do Sul</option>
+                    <option value="ro">Rondônia</option>
+                    <option value="rr">Roraima</option>
+                    <option value="sc">Santa Catarina</option>
                     <option value="sp">São Paulo</option>
+                    <option value="se">Sergipe</option>
+                    <option value="to">Tocantins</option>
                   </Select>
                 </div>
               </div>
@@ -556,14 +478,10 @@ export default function CustomerRegistration() {
               {/* Informações do Negócio */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="acquisitionSource">
-                    Como o cliente foi adquirido?
-                  </Label>
+                  <Label htmlFor="acquisitionSource">Como o cliente foi adquirido?</Label>
                   <Select
                     value={formData.acquisitionSource}
-                    onChange={(e) =>
-                      handleInputChange("acquisitionSource", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("acquisitionSource", e.target.value)}
                   >
                     <option value="">Selecione a fonte de aquisição</option>
                     <option value="app">Aplicativo Mobile</option>
@@ -582,9 +500,7 @@ export default function CustomerRegistration() {
                   <Label htmlFor="serviceType">Tipo de Serviço</Label>
                   <Select
                     value={formData.serviceType}
-                    onChange={(e) =>
-                      handleInputChange("serviceType", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("serviceType", e.target.value)}
                   >
                     <option value="">Selecione o tipo de serviço</option>
                     <option value="consultation">Consultoria</option>
@@ -605,9 +521,7 @@ export default function CustomerRegistration() {
                   <Checkbox
                     id="isCompleted"
                     checked={formData.isCompleted}
-                    onCheckedChange={(checked) =>
-                      handleInputChange("isCompleted", checked as boolean)
-                    }
+                    onCheckedChange={(checked) => handleInputChange("isCompleted", checked as boolean)}
                   />
                   <Label
                     htmlFor="isCompleted"
@@ -622,9 +536,7 @@ export default function CustomerRegistration() {
                   <Textarea
                     id="observations"
                     value={formData.observations}
-                    onChange={(e) =>
-                      handleInputChange("observations", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("observations", e.target.value)}
                     placeholder="Anotações adicionais ou observações..."
                     className="min-h-[80px]"
                   />
@@ -660,18 +572,15 @@ export default function CustomerRegistration() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-green-800">
                 <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">
-                  Cliente cadastrado com sucesso!
-                </span>
+                <span className="font-medium">Cliente cadastrado com sucesso!</span>
               </div>
               <p className="text-green-700 mt-2">
-                Código de Registro:{" "}
-                <span className="font-mono font-bold">{customerCode}</span>
+                Código de Registro: <span className="font-mono font-bold">{customerCode}</span>
               </p>
             </CardContent>
           </Card>
         )}
       </div>
     </div>
-  );
+  )
 }
