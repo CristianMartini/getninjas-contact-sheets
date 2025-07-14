@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "google-auth-library": "latest",
     "google-spreadsheet": "latest",
+    "input-otp": "^1.4.2",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "react": "^19",
