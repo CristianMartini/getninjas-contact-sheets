@@ -411,7 +411,8 @@ export default function CustomerRegistration() {
             <form
               onSubmit={handleSubmit}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && e.target.nodeName !== "TEXTAREA") {
+                const target = e.target as HTMLElement;
+                if (e.key === "Enter" && target.nodeName !== "TEXTAREA") {
                   e.preventDefault();
                 }
               }}
@@ -495,8 +496,15 @@ export default function CustomerRegistration() {
                           ...prev,
                           address: result.address,
                           city: result.city,
-                          state: result.state,
+                          state: result.state.toLowerCase(), // Corrige para minúsculo
                         }));
+                      } else {
+                        toast({
+                          title: "CEP não encontrado",
+                          description:
+                            "Não foi possível localizar o endereço para o CEP informado.",
+                          variant: "destructive",
+                        });
                       }
                     }}
                     placeholder="12345-678"
@@ -540,33 +548,7 @@ export default function CustomerRegistration() {
                     onChange={(e) => handleInputChange("state", e.target.value)}
                   >
                     <option value="">Selecione o estado</option>
-                    <option value="ac">Acre</option>
-                    <option value="al">Alagoas</option>
-                    <option value="ap">Amapá</option>
-                    <option value="am">Amazonas</option>
-                    <option value="ba">Bahia</option>
-                    <option value="ce">Ceará</option>
-                    <option value="df">Distrito Federal</option>
-                    <option value="es">Espírito Santo</option>
-                    <option value="go">Goiás</option>
-                    <option value="ma">Maranhão</option>
-                    <option value="mt">Mato Grosso</option>
-                    <option value="ms">Mato Grosso do Sul</option>
-                    <option value="mg">Minas Gerais</option>
-                    <option value="pa">Pará</option>
-                    <option value="pb">Paraíba</option>
-                    <option value="pr">Paraná</option>
-                    <option value="pe">Pernambuco</option>
-                    <option value="pi">Piauí</option>
-                    <option value="rj">Rio de Janeiro</option>
-                    <option value="rn">Rio Grande do Norte</option>
-                    <option value="rs">Rio Grande do Sul</option>
-                    <option value="ro">Rondônia</option>
-                    <option value="rr">Roraima</option>
-                    <option value="sc">Santa Catarina</option>
                     <option value="sp">São Paulo</option>
-                    <option value="se">Sergipe</option>
-                    <option value="to">Tocantins</option>
                   </Select>
                 </div>
               </div>
