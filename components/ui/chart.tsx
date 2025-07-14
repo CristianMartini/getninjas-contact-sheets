@@ -130,7 +130,7 @@ const ChartTooltipContent = React.forwardRef<
       indicator = "dot",
       hideLabel = false,
       hideIndicator = false,
-      label,
+      label: tooltipLabelProp,
       labelFormatter,
       labelClassName,
       formatter,
@@ -169,7 +169,7 @@ const ChartTooltipContent = React.forwardRef<
 
       return <div className={cn("font-medium", labelClassName)}>{value}</div>;
     }, [
-      label,
+      tooltipLabelProp,
       labelFormatter,
       payload,
       hideLabel,
