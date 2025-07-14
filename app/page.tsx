@@ -484,15 +484,15 @@ export default function CustomerRegistration() {
                     onChange={(e) => handleInputChange("acquisitionSource", e.target.value)}
                   >
                     <option value="">Selecione a fonte de aquisição</option>
-                    <option value="app">Aplicativo Mobile</option>
-                    <option value="website">Site</option>
-                    <option value="referral">Indicação</option>
-                    <option value="social-media">Redes Sociais</option>
-                    <option value="advertising">Publicidade</option>
-                    <option value="walk-in">Visita Presencial</option>
-                    <option value="phone">Ligação Telefônica</option>
-                    <option value="whatsapp">WhatsApp</option>
-                    <option value="other">Outros</option>
+                    <option value="App">Aplicativo Mobile</option>
+                    <option value="Site">Site</option>
+                    <option value="Indicação">Indicação</option>
+                    <option value="Redes Sociais">Redes Sociais</option>
+                    <option value="Publicidade">Publicidade</option>
+                    <option value="Visita Presencial">Visita Presencial</option>
+                    <option value="Ligação Telefônica">Ligação Telefônica</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Outros">Outros</option>
                   </Select>
                 </div>
 
@@ -503,14 +503,14 @@ export default function CustomerRegistration() {
                     onChange={(e) => handleInputChange("serviceType", e.target.value)}
                   >
                     <option value="">Selecione o tipo de serviço</option>
-                    <option value="consultation">Consultoria</option>
-                    <option value="installation">Instalação</option>
-                    <option value="maintenance">Manutenção</option>
-                    <option value="repair">Reparo</option>
-                    <option value="support">Suporte Técnico</option>
-                    <option value="training">Treinamento</option>
-                    <option value="delivery">Entrega</option>
-                    <option value="other">Outros</option>
+                    <option value="Consultoria">Consultoria</option>
+                    <option value="Instalação">Instalação</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Reparo">Reparo</option>
+                    <option value="Suporte Técnico">Suporte Técnico</option>
+                    <option value="Treinamento">Treinamento</option>
+                    <option value="Entrega">Entrega</option>
+                    <option value="Outros">Outros</option>
                   </Select>
                 </div>
               </div>
