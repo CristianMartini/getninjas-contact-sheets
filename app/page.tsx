@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,8 +11,10 @@ import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/hooks/use-toast"
-import { Loader2, Users, CheckCircle, TestTube } from "lucide-react"
+import { Loader2, Users, CheckCircle, TestTube, AlertCircle, Database } from "lucide-react"
 import { registerCustomer, testConnection } from "./actions"
+import { validateEmail, validatePhone, validateCEP, validateName, formatPhone, formatCEP } from "@/lib/validations"
+import Link from "next/link"
 
 interface CustomerData {
   fullName: string
@@ -28,10 +30,16 @@ interface CustomerData {
   observations: string
 }
 
+interface ValidationErrors {
+  [key: string]: string
+}
+
 export default function CustomerRegistration() {
   const [isLoading, setIsLoading] = useState(false)
   const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [connectionStatus, setConnectionStatus] = useState<"unknown" | "connected" | "error">("unknown")
   const [customerCode, setCustomerCode] = useState("")
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [formData, setFormData] = useState<CustomerData>({
     fullName: "",
     email: "",
@@ -46,6 +54,11 @@ export default function CustomerRegistration() {
     observations: "",
   })
 
+  // Testar conexão automaticamente ao carregar a página
+  useEffect(() => {
+    handleTestConnection()
+  }, [])
+
   const generateCustomerCode = () => {
     const timestamp = Date.now().toString().slice(-6)
     const random = Math.floor(Math.random() * 1000)
@@ -54,28 +67,107 @@ export default function CustomerRegistration() {
     return `CUST${timestamp}${random}`
   }
 
+  const validateField = (field: keyof CustomerData, value: string | boolean): string | null => {
+    switch (field) {
+      case "fullName":
+        const nameValidation = validateName(value as string)
+        return nameValidation.isValid ? null : nameValidation.message!
+
+      case "email":
+        const emailValidation = validateEmail(value as string)
+        return emailValidation.isValid ? null : emailValidation.message!
+
+      case "phone":
+        const phoneValidation = validatePhone(value as string)
+        return phoneValidation.isValid ? null : phoneValidation.message!
+
+      case "zipCode":
+        const cepValidation = validateCEP(value as string)
+        return cepValidation.isValid ? null : cepValidation.message!
+
+      default:
+        return null
+    }
+  }
+
   const handleInputChange = (field: keyof CustomerData, value: string | boolean) => {
+    let processedValue = value
+
+    // Formatação automática
+    if (field === "phone" && typeof value === "string") {
+      processedValue = formatPhone(value)
+    } else if (field === "zipCode" && typeof value === "string") {
+      processedValue = formatCEP(value)
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: processedValue,
     }))
+
+    // Validação em tempo real
+    if (typeof processedValue === "string") {
+      const error = validateField(field, processedValue)
+      setValidationErrors((prev) => ({
+        ...prev,
+        [field]: error || "",
+      }))
+    }
+  }
+
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {}
+    let isValid = true
+
+    // Validar campos obrigatórios
+    const nameError = validateField("fullName", formData.fullName)
+    if (nameError) {
+      errors.fullName = nameError
+      isValid = false
+    }
+
+    const emailError = validateField("email", formData.email)
+    if (emailError) {
+      errors.email = emailError
+      isValid = false
+    }
+
+    const phoneError = validateField("phone", formData.phone)
+    if (phoneError) {
+      errors.phone = phoneError
+      isValid = false
+    }
+
+    const cepError = validateField("zipCode", formData.zipCode)
+    if (cepError) {
+      errors.zipCode = cepError
+      isValid = false
+    }
+
+    setValidationErrors(errors)
+    return isValid
   }
 
   const handleTestConnection = async () => {
     setIsTestingConnection(true)
+    setConnectionStatus("unknown")
+
     try {
       const result = await testConnection()
       if (result.success) {
+        setConnectionStatus("connected")
         toast({
-          title: "Conexão bem-sucedida!",
-          description: `Conectado à planilha: ${result.sheetTitle}`,
+          title: "✅ Conexão Estabelecida",
+          description: result.message,
         })
       } else {
+        setConnectionStatus("error")
         throw new Error(result.error || "Falha ao conectar com a planilha")
       }
     } catch (error) {
+      setConnectionStatus("error")
       toast({
-        title: "Erro de Conexão",
+        title: "❌ Erro de Conexão",
         description: error instanceof Error ? error.message : "Falha ao conectar com o Google Sheets",
         variant: "destructive",
       })
@@ -87,10 +179,21 @@ export default function CustomerRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.fullName || !formData.email || !formData.phone) {
+    // Verificar conexão antes de enviar
+    if (connectionStatus !== "connected") {
       toast({
-        title: "Erro de Validação",
-        description: "Por favor, preencha todos os campos obrigatórios (Nome, Email, Telefone)",
+        title: "⚠️ Conexão Necessária",
+        description: "Teste a conexão com o Google Sheets antes de cadastrar",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Validar formulário
+    if (!validateForm()) {
+      toast({
+        title: "❌ Dados Inválidos",
+        description: "Por favor, corrija os erros no formulário antes de continuar",
         variant: "destructive",
       })
       return
@@ -102,6 +205,11 @@ export default function CustomerRegistration() {
       const newCustomerCode = generateCustomerCode()
       setCustomerCode(newCustomerCode)
 
+      toast({
+        title: "📝 Processando...",
+        description: "Cadastrando cliente no sistema...",
+      })
+
       const result = await registerCustomer({
         customerCode: newCustomerCode,
         ...formData,
@@ -109,8 +217,8 @@ export default function CustomerRegistration() {
 
       if (result.success) {
         toast({
-          title: "Sucesso!",
-          description: `Cliente registrado com sucesso! Código: ${newCustomerCode}`,
+          title: "🎉 Sucesso!",
+          description: result.message,
         })
 
         // Limpar formulário
@@ -127,17 +235,40 @@ export default function CustomerRegistration() {
           isCompleted: false,
           observations: "",
         })
+        setValidationErrors({})
       } else {
         throw new Error(result.error || "Falha ao registrar cliente")
       }
     } catch (error) {
       toast({
-        title: "Erro",
+        title: "❌ Erro no Cadastro",
         description: error instanceof Error ? error.message : "Falha ao registrar cliente",
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const getConnectionStatusColor = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return "border-green-200 bg-green-50"
+      case "error":
+        return "border-red-200 bg-red-50"
+      default:
+        return "border-blue-200 bg-blue-50"
+    }
+  }
+
+  const getConnectionStatusIcon = () => {
+    switch (connectionStatus) {
+      case "connected":
+        return <CheckCircle className="h-5 w-5 text-green-600" />
+      case "error":
+        return <AlertCircle className="h-5 w-5 text-red-600" />
+      default:
+        return <TestTube className="h-5 w-5 text-blue-600" />
     }
   }
 
@@ -150,22 +281,38 @@ export default function CustomerRegistration() {
             <h1 className="text-3xl font-bold text-gray-900">Sistema de Cadastro de Clientes</h1>
           </div>
           <p className="text-gray-600">Registre novos clientes e sincronize automaticamente com o Google Sheets</p>
+
+          {/* Link para página de gerenciamento */}
+          <div className="mt-4">
+            <Link href="/customers">
+              <Button variant="outline" className="gap-2 bg-transparent">
+                <Database className="h-4 w-4" />
+                Gerenciar Clientes
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {/* Botão de Teste de Conexão */}
-        <Card className="mb-6 border-blue-200 bg-blue-50">
+        {/* Status de Conexão */}
+        <Card className={`mb-6 ${getConnectionStatusColor()}`}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-blue-900">Teste de Conexão com Google Sheets</h3>
-                <p className="text-sm text-blue-700">Verifique se a conexão com a planilha está funcionando</p>
+              <div className="flex items-center gap-3">
+                {getConnectionStatusIcon()}
+                <div>
+                  <h3 className="font-medium">
+                    {connectionStatus === "connected" && "Conectado ao Google Sheets"}
+                    {connectionStatus === "error" && "Erro de Conexão"}
+                    {connectionStatus === "unknown" && "Status de Conexão"}
+                  </h3>
+                  <p className="text-sm opacity-75">
+                    {connectionStatus === "connected" && "Sistema pronto para cadastrar clientes"}
+                    {connectionStatus === "error" && "Verifique as configurações e tente novamente"}
+                    {connectionStatus === "unknown" && "Verificando conexão com a planilha..."}
+                  </p>
+                </div>
               </div>
-              <Button
-                onClick={handleTestConnection}
-                disabled={isTestingConnection}
-                variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-100 bg-transparent"
-              >
+              <Button onClick={handleTestConnection} disabled={isTestingConnection} variant="outline" size="sm">
                 {isTestingConnection ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -189,7 +336,7 @@ export default function CustomerRegistration() {
               Cadastro de Novo Cliente
             </CardTitle>
             <CardDescription>
-              Preencha os dados do cliente abaixo. Um código de registro único será gerado automaticamente.
+              Preencha os dados do cliente abaixo. Todos os campos marcados com * são obrigatórios.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -203,8 +350,15 @@ export default function CustomerRegistration() {
                     value={formData.fullName}
                     onChange={(e) => handleInputChange("fullName", e.target.value)}
                     placeholder="Digite o nome completo do cliente"
+                    className={validationErrors.fullName ? "border-red-500" : ""}
                     required
                   />
+                  {validationErrors.fullName && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {validationErrors.fullName}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -215,8 +369,15 @@ export default function CustomerRegistration() {
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="cliente@exemplo.com"
+                    className={validationErrors.email ? "border-red-500" : ""}
                     required
                   />
+                  {validationErrors.email && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {validationErrors.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -228,8 +389,15 @@ export default function CustomerRegistration() {
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="(11) 99999-9999"
+                    className={validationErrors.phone ? "border-red-500" : ""}
                     required
                   />
+                  {validationErrors.phone && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {validationErrors.phone}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -239,7 +407,14 @@ export default function CustomerRegistration() {
                     value={formData.zipCode}
                     onChange={(e) => handleInputChange("zipCode", e.target.value)}
                     placeholder="12345-678"
+                    className={validationErrors.zipCode ? "border-red-500" : ""}
                   />
+                  {validationErrors.zipCode && (
+                    <p className="text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4" />
+                      {validationErrors.zipCode}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -370,7 +545,11 @@ export default function CustomerRegistration() {
 
               {/* Botão de Envio */}
               <div className="flex justify-end pt-6">
-                <Button type="submit" disabled={isLoading} className="min-w-[150px]">
+                <Button
+                  type="submit"
+                  disabled={isLoading || connectionStatus !== "connected"}
+                  className="min-w-[150px]"
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
