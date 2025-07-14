@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "@/hooks/use-toast"
@@ -267,39 +267,35 @@ export default function CustomerRegistration() {
 
                 <div className="space-y-2">
                   <Label htmlFor="state">Estado</Label>
-                  <Select value={formData.state} onValueChange={(value) => handleInputChange("state", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ac">Acre</SelectItem>
-                      <SelectItem value="al">Alagoas</SelectItem>
-                      <SelectItem value="ap">Amapá</SelectItem>
-                      <SelectItem value="am">Amazonas</SelectItem>
-                      <SelectItem value="ba">Bahia</SelectItem>
-                      <SelectItem value="ce">Ceará</SelectItem>
-                      <SelectItem value="df">Distrito Federal</SelectItem>
-                      <SelectItem value="es">Espírito Santo</SelectItem>
-                      <SelectItem value="go">Goiás</SelectItem>
-                      <SelectItem value="ma">Maranhão</SelectItem>
-                      <SelectItem value="mt">Mato Grosso</SelectItem>
-                      <SelectItem value="ms">Mato Grosso do Sul</SelectItem>
-                      <SelectItem value="mg">Minas Gerais</SelectItem>
-                      <SelectItem value="pa">Pará</SelectItem>
-                      <SelectItem value="pb">Paraíba</SelectItem>
-                      <SelectItem value="pr">Paraná</SelectItem>
-                      <SelectItem value="pe">Pernambuco</SelectItem>
-                      <SelectItem value="pi">Piauí</SelectItem>
-                      <SelectItem value="rj">Rio de Janeiro</SelectItem>
-                      <SelectItem value="rn">Rio Grande do Norte</SelectItem>
-                      <SelectItem value="rs">Rio Grande do Sul</SelectItem>
-                      <SelectItem value="ro">Rondônia</SelectItem>
-                      <SelectItem value="rr">Roraima</SelectItem>
-                      <SelectItem value="sc">Santa Catarina</SelectItem>
-                      <SelectItem value="sp">São Paulo</SelectItem>
-                      <SelectItem value="se">Sergipe</SelectItem>
-                      <SelectItem value="to">Tocantins</SelectItem>
-                    </SelectContent>
+                  <Select value={formData.state} onChange={(e) => handleInputChange("state", e.target.value)}>
+                    <option value="">Selecione o estado</option>
+                    <option value="ac">Acre</option>
+                    <option value="al">Alagoas</option>
+                    <option value="ap">Amapá</option>
+                    <option value="am">Amazonas</option>
+                    <option value="ba">Bahia</option>
+                    <option value="ce">Ceará</option>
+                    <option value="df">Distrito Federal</option>
+                    <option value="es">Espírito Santo</option>
+                    <option value="go">Goiás</option>
+                    <option value="ma">Maranhão</option>
+                    <option value="mt">Mato Grosso</option>
+                    <option value="ms">Mato Grosso do Sul</option>
+                    <option value="mg">Minas Gerais</option>
+                    <option value="pa">Pará</option>
+                    <option value="pb">Paraíba</option>
+                    <option value="pr">Paraná</option>
+                    <option value="pe">Pernambuco</option>
+                    <option value="pi">Piauí</option>
+                    <option value="rj">Rio de Janeiro</option>
+                    <option value="rn">Rio Grande do Norte</option>
+                    <option value="rs">Rio Grande do Sul</option>
+                    <option value="ro">Rondônia</option>
+                    <option value="rr">Roraima</option>
+                    <option value="sc">Santa Catarina</option>
+                    <option value="sp">São Paulo</option>
+                    <option value="se">Sergipe</option>
+                    <option value="to">Tocantins</option>
                   </Select>
                 </div>
               </div>
@@ -310,22 +306,18 @@ export default function CustomerRegistration() {
                   <Label htmlFor="acquisitionSource">Como o cliente foi adquirido?</Label>
                   <Select
                     value={formData.acquisitionSource}
-                    onValueChange={(value) => handleInputChange("acquisitionSource", value)}
+                    onChange={(e) => handleInputChange("acquisitionSource", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a fonte de aquisição" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="app">Aplicativo Mobile</SelectItem>
-                      <SelectItem value="website">Site</SelectItem>
-                      <SelectItem value="referral">Indicação</SelectItem>
-                      <SelectItem value="social-media">Redes Sociais</SelectItem>
-                      <SelectItem value="advertising">Publicidade</SelectItem>
-                      <SelectItem value="walk-in">Visita Presencial</SelectItem>
-                      <SelectItem value="phone">Ligação Telefônica</SelectItem>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                      <SelectItem value="other">Outros</SelectItem>
-                    </SelectContent>
+                    <option value="">Selecione a fonte de aquisição</option>
+                    <option value="app">Aplicativo Mobile</option>
+                    <option value="website">Site</option>
+                    <option value="referral">Indicação</option>
+                    <option value="social-media">Redes Sociais</option>
+                    <option value="advertising">Publicidade</option>
+                    <option value="walk-in">Visita Presencial</option>
+                    <option value="phone">Ligação Telefônica</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="other">Outros</option>
                   </Select>
                 </div>
 
@@ -333,21 +325,17 @@ export default function CustomerRegistration() {
                   <Label htmlFor="serviceType">Tipo de Serviço</Label>
                   <Select
                     value={formData.serviceType}
-                    onValueChange={(value) => handleInputChange("serviceType", value)}
+                    onChange={(e) => handleInputChange("serviceType", e.target.value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo de serviço" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="consultation">Consultoria</SelectItem>
-                      <SelectItem value="installation">Instalação</SelectItem>
-                      <SelectItem value="maintenance">Manutenção</SelectItem>
-                      <SelectItem value="repair">Reparo</SelectItem>
-                      <SelectItem value="support">Suporte Técnico</SelectItem>
-                      <SelectItem value="training">Treinamento</SelectItem>
-                      <SelectItem value="delivery">Entrega</SelectItem>
-                      <SelectItem value="other">Outros</SelectItem>
-                    </SelectContent>
+                    <option value="">Selecione o tipo de serviço</option>
+                    <option value="consultation">Consultoria</option>
+                    <option value="installation">Instalação</option>
+                    <option value="maintenance">Manutenção</option>
+                    <option value="repair">Reparo</option>
+                    <option value="support">Suporte Técnico</option>
+                    <option value="training">Treinamento</option>
+                    <option value="delivery">Entrega</option>
+                    <option value="other">Outros</option>
                   </Select>
                 </div>
               </div>
