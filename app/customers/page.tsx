@@ -59,6 +59,16 @@ interface EditingCustomer extends Partial<CustomerData> {
   id: number;
 }
 
+interface ViaCEPResponse {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  erro?: boolean;
+}
+
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerData[]>(
@@ -69,6 +79,10 @@ export default function CustomersPage() {
   const [editingCustomer, setEditingCustomer] =
     useState<EditingCustomer | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoadingCEP, setIsLoadingCEP] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<CustomerData | null>(
+    null
+  );
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
@@ -117,6 +131,76 @@ export default function CustomersPage() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const consultarCEP = async (cep: string) => {
+    if (!cep || cep.length < 8 || !editingCustomer) return;
+
+    setIsLoadingCEP(true);
+    try {
+      const cepLimpo = cep.replace(/\D/g, "");
+      const response = await fetch(
+        `https://viacep.com.br/ws/${cepLimpo}/json/`
+      );
+      const data: ViaCEPResponse = await response.json();
+
+      if (data.erro) {
+        toast({
+          title: "❌ CEP não encontrado",
+          description: "O CEP informado não foi encontrado na base de dados.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Preencher automaticamente os campos
+      setEditingCustomer((prev) =>
+        prev
+          ? {
+              ...prev,
+              address: data.logradouro || "",
+              city: data.localidade || "",
+              state: data.uf || "",
+            }
+          : null
+      );
+
+      toast({
+        title: "✅ Endereço encontrado",
+        description: `Endereço preenchido automaticamente para ${data.localidade}/${data.uf}`,
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Erro ao consultar CEP",
+        description: "Não foi possível consultar o CEP. Verifique sua conexão.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingCEP(false);
+    }
+  };
+
+  const handleCEPChange = (value: string) => {
+    if (!editingCustomer) return;
+
+    // Formatação básica do CEP
+    const formattedCEP = value
+      .replace(/\D/g, "")
+      .replace(/(\d{5})(\d{3})/, "$1-$2");
+
+    setEditingCustomer((prev) =>
+      prev
+        ? {
+            ...prev,
+            zipCode: formattedCEP,
+          }
+        : null
+    );
+
+    // Consultar CEP quando tiver 8 dígitos
+    if (formattedCEP.replace(/\D/g, "").length === 8) {
+      consultarCEP(formattedCEP);
     }
   };
 
@@ -255,12 +339,43 @@ export default function CustomersPage() {
   };
 
   const handleDelete = async (customer: CustomerData) => {
-    if (
-      !confirm(`Tem certeza que deseja excluir o cliente ${customer.fullName}?`)
-    ) {
-      return;
-    }
+    setCustomerToDelete(customer);
 
+    toast({
+      title: "🗑️ Confirmar exclusão",
+      description: `Tem certeza que deseja excluir o cliente "${customer.fullName}"?`,
+      action: (
+        <div className="flex gap-2 mt-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setCustomerToDelete(null);
+              toast({
+                title: "❌ Exclusão cancelada",
+                description: "O cliente não foi excluído.",
+              });
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={async () => {
+              setCustomerToDelete(null);
+              await performDelete(customer);
+            }}
+          >
+            Confirmar
+          </Button>
+        </div>
+      ),
+      duration: 10000, // 10 segundos para dar tempo de decidir
+    });
+  };
+
+  const performDelete = async (customer: CustomerData) => {
     try {
       toast({
         title: "🗑️ Excluindo...",
@@ -566,22 +681,25 @@ export default function CustomersPage() {
                             className="bg-gray-50 h-8 px-2 py-1 text-sm"
                           >
                             <option value="">UF</option>
-                            <option value="sp">SP</option>
-                            <option value="rj">RJ</option>
-                            <option value="mg">MG</option>
+                            <option value="SP">SP</option>
                           </Select>
                         </div>
                         <div className="space-y-1">
                           <Label>CEP</Label>
-                          <Input
-                            value={editingCustomer.zipCode || ""}
-                            onChange={(e) =>
-                              handleFieldChange("zipCode", e.target.value)
-                            }
-                            className={`bg-gray-50 h-8 px-2 py-1 text-sm ${
-                              validationErrors.zipCode ? "border-red-500" : ""
-                            }`}
-                          />
+                          <div className="relative">
+                            <Input
+                              value={editingCustomer.zipCode || ""}
+                              onChange={(e) => handleCEPChange(e.target.value)}
+                              className={`bg-gray-50 h-8 px-2 py-1 text-sm ${
+                                validationErrors.zipCode ? "border-red-500" : ""
+                              }`}
+                            />
+                            {isLoadingCEP && (
+                              <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
+                              </div>
+                            )}
+                          </div>
                           {validationErrors.zipCode && (
                             <p className="text-xs text-red-600 flex items-center gap-1">
                               <AlertCircle className="h-4 w-4" />
